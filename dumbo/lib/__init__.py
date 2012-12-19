@@ -17,6 +17,7 @@
 import heapq
 import os
 import types
+import inspect
 from itertools import chain, imap, izip
 from math import sqrt
 from copy import copy
@@ -128,7 +129,7 @@ class MultiMapper(object):
             path, key = key
             for pattern, mapper in mappers:
                 if pattern in path:
-                    for output in mapper(key, value):
+                    for output in mapper(key, value, path=path):
                         yield output
 
     def __call__joinkey(self, data):
@@ -138,7 +139,7 @@ class MultiMapper(object):
             key.body = key.body[1]
             for pattern, mapper in mappers:
                 if pattern in path:
-                    for output in mapper(key, value):
+                    for output in mapper(key, value, path=path):
                         yield output
 
     def add(self, pattern, mapper):
@@ -169,15 +170,20 @@ class JoinMapper(object):
             mapper.configure()
         if hasattr(mapper, 'close'):
             self.closefunc = mapper.close
+        mapper_call = mapper
+        if type(self.mapper) in (types.ClassType, type):
+            mapper_call = mapper.__call__
         self.mapper = mapper
+        if not inspect.getargspec(mapper_call).keywords:
+            self.mapper = lambda key, value, **kwargs: mapper(key, value)
 
     def close(self):
         if self.closefunc:
             self.closefunc()
 
-    def __call__(self, key, value):
+    def __call__(self, key, value, **kwargs):
         key.isprimary = self.isprimary
-        for k, v in self.mapper(key.body, value):
+        for k, v in self.mapper(key.body, value, **kwargs):
             jk = copy(key)
             jk.body = k
             yield jk, v
