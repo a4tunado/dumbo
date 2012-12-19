@@ -171,7 +171,7 @@ class JoinMapper(object):
         if hasattr(mapper, 'close'):
             self.closefunc = mapper.close
         mapper_call = mapper
-        if type(self.mapper) in (types.ClassType, type):
+        if isinstance(mapper_call, mrbase_class):
             mapper_call = mapper.__call__
         self.mapper = mapper
         if not inspect.getargspec(mapper_call).keywords:
