@@ -463,7 +463,7 @@ def valwrapper(data, valfunc):
 
 def mapfunc_iter(data, mapfunc):
     for (key, value) in data:
-        for output in mapfunc(key, value):
+        for output in mapfunc(key, value) or ():
             yield output
 
 
@@ -478,7 +478,7 @@ def itermap(data, mapfunc, valfunc=None):
 
 def redfunc_iter(data, redfunc):
     for (key, values) in data:
-        for output in redfunc(key, values):
+        for output in redfunc(key, values) or ():
             yield output
 
 

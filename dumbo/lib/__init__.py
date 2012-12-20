@@ -183,7 +183,7 @@ class JoinMapper(object):
 
     def __call__(self, key, value, **kwargs):
         key.isprimary = self.isprimary
-        for k, v in self.mapper(key.body, value, **kwargs):
+        for k, v in self.mapper(key.body, value, **kwargs) or ():
             jk = copy(key)
             jk.body = k
             yield jk, v
@@ -208,14 +208,12 @@ class JoinCombiner(object):
     def __call__(self, key, values):
         if key.isprimary:
             self._key = key.body
-            output = self.primary(key.body, values)
-            if output:
-                for k, v in output:
-                    jk = copy(key)
-                    jk.body = k
-                    yield jk, v
+            for k, v in self.primary(key.body, values) or ():
+                jk = copy(key)
+                jk.body = k
+                yield jk, v
         elif not self.secondary_blocked(key.body):
-            for k, v in self.secondary(key.body, values):
+            for k, v in self.secondary(key.body, values) or ():
                 jk = copy(key)
                 jk.body = k
                 yield jk, v
